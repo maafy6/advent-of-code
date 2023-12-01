@@ -2,15 +2,17 @@
 from typing import List, Optional
 from importlib import import_module
 
+import aocd
 import pytest
 
 
-def solve(year: int, day: int, parts: List[int]) -> int:
+def solve(year: int, day: int, parts: List[int], submit: bool = False) -> int:
     """Run the solution.
 
     :param year: The year for the challenge.
     :param day: The day for the challenge.
     :param parts: The parts of the challenge to solve.
+    :param submit: Submit the answer to the server.
     :returns: A return code.
         1 if there were no solutions, 0 otherwise.
     """
@@ -26,6 +28,10 @@ def solve(year: int, day: int, parts: List[int]) -> int:
             func = getattr(module, f"part{part}")
             solution = func()
             print(f"Part {part}: {solution}")
+
+            if submit:
+                part_id = {1: "a", 2: "b"}
+                aocd.submit(solution, year=year, day=day, part=part_id[part])
         else:
             print(f"No solution for AOC {year}-{day:02d} Part {part}")
             rc = 1

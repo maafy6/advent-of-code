@@ -17,6 +17,7 @@ class Args(argparse.Namespace):
     day: int
     part: List[int]
     test: bool
+    submit: bool
 
 
 def _get_args():
@@ -32,7 +33,10 @@ def _get_args():
     parser.add_argument("--year", "-y", type=int, default=latest.year)
     parser.add_argument("--day", "-d", type=int, default=latest.day)
     parser.add_argument("--part", "-p", type=int, nargs="*", default=[1, 2])
-    parser.add_argument("--test", "-t", action="store_true", default=False)
+
+    action_group = parser.add_mutually_exclusive_group()
+    action_group.add_argument("--test", "-t", action="store_true", default=False)
+    action_group.add_argument("--submit", "-s", action="store_true", default=False)
 
     return parser.parse_args(namespace=Args())
 
@@ -42,7 +46,7 @@ def main() -> None:
     args = _get_args()
 
     if not args.test:
-        rc = solve(args.year, args.day, args.part)
+        rc = solve(args.year, args.day, args.part, args.submit)
     else:
         rc = test(args.year, args.day, args.part)
 
