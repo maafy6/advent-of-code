@@ -1,0 +1,6 @@
+-r requirements.txt
+advent-of-code-data[nb]
+black
+isort
+pylint
+pytest
