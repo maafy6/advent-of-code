@@ -49,7 +49,7 @@ def test(year: int, day: int, parts: Optional[List[int]] = None) -> int:
     """
     markers = f"test_{year}_{day:02d}"
 
-    if parts:
+    if len(parts) == 1:
         part_markers = " or ".join(f"test_part_{p}" for p in parts)
         markers += f" and ({part_markers})"
 
