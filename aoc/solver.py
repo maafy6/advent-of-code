@@ -1,4 +1,6 @@
 """Solving utilities."""
+import asyncio
+import inspect
 from typing import List, Optional
 from importlib import import_module
 
@@ -27,6 +29,10 @@ def solve(year: int, day: int, parts: List[int], submit: bool = False) -> int:
         if hasattr(module, f"part{part}"):
             func = getattr(module, f"part{part}")
             solution = func()
+            if inspect.isawaitable(solution):
+                loop = asyncio.get_event_loop()
+                solution = loop.run_until_complete(solution)
+
             print(f"Part {part}: {solution}")
 
             if submit:
