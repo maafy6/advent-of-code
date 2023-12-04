@@ -1,2 +1,4 @@
 advent-of-code-data
+pytest
+pytest-asyncio
 typing_extensions

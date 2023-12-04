@@ -1,7 +1,6 @@
 -r requirements.txt
 advent-of-code-data[nb]
 black
+ipykernel
 isort
 pylint
-pytest
-pytest-asyncio
