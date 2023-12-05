@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+"""
+Script to create template files.
+"""
+import argparse
+import sys
+from pathlib import Path
+
+from aocd.get import current_day, most_recent_year
+
+from aoc.template import get_description, main_template
+
+
+class Args(argparse.Namespace):  # pylint: disable=too-few-public-methods
+    """Command line arguments model."""
+
+    year: int
+    day: int
+    docstring: bool
+
+
+def get_args() -> Args:
+    """Parse the command line arguments.
+
+    :returns: An Args namespace.
+    """
+    latest_year = most_recent_year()
+    latest_day = current_day()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--year", "-y", type=int, default=latest_year)
+    parser.add_argument("--day", "-d", type=int, default=latest_day)
+    parser.add_argument("--docstring", "-D", action="store_true", default=False)
+    return parser.parse_args(namespace=Args())
+
+
+def main():
+    """Main function."""
+    args = get_args()
+    year, day = args.year, args.day
+
+    source_file = Path(f"aoc/aoc_{year}/advent_{year}_{day:02d}.py")
+    if args.docstring:
+        print(get_description(day=day, year=year))
+    elif not source_file.exists():
+        source_file.write_text(main_template(year, day), encoding="utf-8")
+    else:
+        print(f"Source file {source_file} exists, skipping.", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

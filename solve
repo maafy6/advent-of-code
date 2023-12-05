@@ -5,10 +5,12 @@ Script to run solutions.
 
 import argparse
 import sys
-from datetime import date
 from typing import List
 
+from aocd.get import current_day, most_recent_year
+
 from aoc.solver import solve, test
+
 
 class Args(argparse.Namespace):
     """Namespace type for arguments."""
@@ -22,16 +24,12 @@ class Args(argparse.Namespace):
 
 def _get_args():
     """Parse the command line arguments."""
-    latest = date.today()
-    if latest.month != 12:
-        latest.year -= 1
-        latest.day = 25
-    elif latest.day > 25:
-        latest.day = 25
+    latest_year = most_recent_year()
+    latest_day = current_day()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--year", "-y", type=int, default=latest.year)
-    parser.add_argument("--day", "-d", type=int, default=latest.day)
+    parser.add_argument("--year", "-y", type=int, default=latest_year)
+    parser.add_argument("--day", "-d", type=int, default=latest_day)
     parser.add_argument("--part", "-p", type=int, nargs="*", default=[1, 2])
 
     action_group = parser.add_mutually_exclusive_group()
