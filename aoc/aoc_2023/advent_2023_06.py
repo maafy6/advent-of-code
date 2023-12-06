@@ -151,7 +151,12 @@ def race_outcomes(time: int, min_dist: int) -> int:
     :param min_dist: The distance to beat.
     :returns: The number of ways to play the race that result in a win.
     """
-    return len([i * (time - i) for i in range(time + 1) if i * (time - i) > min_dist])
+    # The total distance for a given charge period is (charge) * (time - charge)
+    # so the winning charge times satisfy the equation x*(time - x) > min_dist.
+    # Solve as a quadratic and then count the number of integer values in
+    # between the solutions.
+    solns = [(time + i * math.sqrt(time * time - 4 * min_dist)) / 2 for i in (-1, 1)]
+    return int(math.ceil(solns[1]) - math.floor(solns[0]) - 1)
 
 
 def part1(data: str = DATA) -> int:

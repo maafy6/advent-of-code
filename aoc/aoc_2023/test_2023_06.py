@@ -17,9 +17,12 @@ def _data() -> str:
     ).strip()
 
 
-def test_race_outcomes() -> None:
+@pytest.mark.parametrize(
+    ("time", "min_dist", "expected"), [(7, 9, 4), (15, 40, 8), (30, 200, 9)]
+)
+def test_race_outcomes(time: int, min_dist: int, expected: int) -> None:
     """Test race_outcomes."""
-    assert race_outcomes(7, 9) == 4
+    assert race_outcomes(time, min_dist) == expected
 
 
 def test_part_1(data: str) -> None:
