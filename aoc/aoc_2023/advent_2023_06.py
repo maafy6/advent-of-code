@@ -131,6 +131,7 @@ def parse_data(data: str, *, squash: bool = False) -> list[tuple[int, int]]:
     """Parse the input data.
 
     :param data: The input data.
+    :param squash: Ignore whitespace between digits.
     :returns: A list of (time, dist) entries representing the races.
     """
 
@@ -143,7 +144,7 @@ def parse_data(data: str, *, squash: bool = False) -> list[tuple[int, int]]:
     return list(zip(*[parse_line(line.split(":")[1]) for line in data.splitlines()]))
 
 
-def race_outcomes(time: int, min_dist: int) -> list[int]:
+def race_outcomes(time: int, min_dist: int) -> int:
     """Determine the number of winning race outcomes.
 
     :param time: The time of the race.
