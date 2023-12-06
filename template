@@ -8,7 +8,7 @@ from pathlib import Path
 
 from aocd.get import current_day, most_recent_year
 
-from aoc.template import get_description, main_template
+from aoc.template import get_description, main_template, test_template
 
 
 class Args(argparse.Namespace):  # pylint: disable=too-few-public-methods
@@ -40,12 +40,20 @@ def main():
     year, day = args.year, args.day
 
     source_file = Path(f"aoc/aoc_{year}/advent_{year}_{day:02d}.py")
+    test_file = Path(f"aoc/aoc_{year}/test_{year}_{day:02d}.py")
     if args.docstring:
-        print(get_description(day=day, year=year))
-    elif not source_file.exists():
+        print("\n".join(get_description(day=day, year=year)))
+        return
+
+    if not source_file.exists():
         source_file.write_text(main_template(year, day), encoding="utf-8")
     else:
         print(f"Source file {source_file} exists, skipping.", file=sys.stderr)
+
+    if not test_file.exists():
+        test_file.write_text(test_template(year, day), encoding="utf-8")
+    else:
+        print(f"Test file {test_file} exists, skipping.", file=sys.stderr)
 
 
 if __name__ == "__main__":
