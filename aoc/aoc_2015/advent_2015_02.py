@@ -62,7 +62,7 @@ def part1(data: str = DATA) -> int:
     :returns: The required square footage.
     """
     total = 0
-    for dim in data.split("\n"):
+    for dim in data.splitlines():
         l, w, h = [int(d) for d in dim.split("x")]
         f1 = l * w
         f2 = w * h
@@ -79,7 +79,7 @@ def part2(data: str = DATA) -> int:
     :returns: The required length of ribbon.
     """
     total = 0
-    for dim in data.split("\n"):
+    for dim in data.splitlines():
         l, w, h = [int(d) for d in dim.split("x")]
         total += l * w * h + 2 * (l + w + h - max(l, w, h))
 

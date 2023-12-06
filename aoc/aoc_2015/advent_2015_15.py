@@ -167,7 +167,7 @@ def part1(data: str = DATA) -> int:
     :param data: The input data.
     :returns: The highest scoring cookie.
     """
-    ingredients = [Ingredient.from_desc(desc) for desc in data.split("\n")]
+    ingredients = [Ingredient.from_desc(desc) for desc in data.splitlines()]
 
     score = 0
     for part in partition(100, len(ingredients)):
@@ -183,7 +183,7 @@ def part2(data: str = DATA) -> int:
     :param data: The input data.
     :returns: The highest scoring cookie.
     """
-    ingredients = [Ingredient.from_desc(desc) for desc in data.split("\n")]
+    ingredients = [Ingredient.from_desc(desc) for desc in data.splitlines()]
 
     score = 0
     for part in partition(100, len(ingredients)):

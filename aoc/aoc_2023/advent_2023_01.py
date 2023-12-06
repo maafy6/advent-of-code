@@ -109,7 +109,7 @@ def part1(data: str = DATA) -> int:
     :returns: The expected calibration value.
     """
     total = 0
-    for line in data.split("\n"):
+    for line in data.splitlines():
         total += 10 * int(re.search(r"\d", line).group())
         total += int(re.search(r"\d", line[::-1]).group())
 
@@ -125,7 +125,7 @@ def part2(data: str = DATA) -> int:
     digit_pattern = r"one|two|three|four|five|six|seven|eight|nine"
 
     total = 0
-    for line in data.split("\n"):
+    for line in data.splitlines():
         total += 10 * to_int(re.search(f"{digit_pattern}|\\d", line).group())
         total += to_int(
             re.search(f"{digit_pattern[::-1]}|\\d", line[::-1]).group()[::-1]

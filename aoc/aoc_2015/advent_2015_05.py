@@ -84,7 +84,7 @@ def part1(data: str = DATA) -> int:
     :param data: Input data.
     :returns: The number of nice words.
     """
-    return len([x for x in data.split("\n") if is_nice_part_1(x)])
+    return len([x for x in data.splitlines() if is_nice_part_1(x)])
 
 
 def is_nice_part_2(v: str) -> bool:
@@ -106,4 +106,4 @@ def part2(data: str = DATA) -> int:
     :param data: Input data.
     :returns: The number of nice words.
     """
-    return len([x for x in data.split("\n") if is_nice_part_2(x)])
+    return len([x for x in data.splitlines() if is_nice_part_2(x)])

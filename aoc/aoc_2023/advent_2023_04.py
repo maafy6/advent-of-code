@@ -151,7 +151,7 @@ def gen_cards(data: str) -> Iterator[Tuple[Sequence[str], Sequence[str]]]:
     :yields: A tuple containing lists of winning numbers and the numbers for
         the card.
     """
-    for card in data.split("\n"):
+    for card in data.splitlines():
         card_data = card.split(":")[1]
         winning, card_numbers = card_data.split("|")
 

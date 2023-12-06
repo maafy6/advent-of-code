@@ -48,7 +48,7 @@ def test_part_1(reindeer: str) -> None:
 )
 def test_reindeer_race(reindeer: str, duration: int, scores: Mapping[str, int]) -> None:
     """Test reindeer_race."""
-    reindeers = [Reindeer.from_str(desc) for desc in reindeer.split("\n")]
+    reindeers = [Reindeer.from_str(desc) for desc in reindeer.splitlines()]
     assert reindeer_race(reindeers, duration) == scores
 
 

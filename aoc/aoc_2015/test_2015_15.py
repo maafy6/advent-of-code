@@ -56,7 +56,7 @@ def test_cookie_score(
     """Test cookie_score."""
     ingreds = {
         desc.split(":")[0]: Ingredient.from_desc(desc)
-        for desc in ingredients.split("\n")
+        for desc in ingredients.splitlines()
     }
     cookie = {
         ingreds[ingredient]: weight for ingredient, weight in ingredient_weights.items()
@@ -79,7 +79,7 @@ def test_cookie_calories(
     """Test cookie_calories."""
     ingreds = {
         desc.split(":")[0]: Ingredient.from_desc(desc)
-        for desc in ingredients.split("\n")
+        for desc in ingredients.splitlines()
     }
     cookie = {
         ingreds[ingredient]: weight for ingredient, weight in ingredient_weights.items()

@@ -103,7 +103,7 @@ def part1(data: str = DATA) -> int:
     :returns: The number of lights that are lit.
     """
     lights = create_lights()
-    for instruction in data.split("\n"):
+    for instruction in data.splitlines():
         try:
             command, corner1, corner2 = parse_instruction(instruction)
         except ValueError:
@@ -128,7 +128,7 @@ def part2(data: str = DATA) -> int:
     :returns: Thr total brightness.
     """
     lights = create_lights()
-    for instruction in data.split("\n"):
+    for instruction in data.splitlines():
         command, corner1, corner2 = parse_instruction(instruction)
         for i in range(corner1[0], corner2[0] + 1):
             for j in range(corner1[1], corner2[1] + 1):

@@ -69,7 +69,7 @@ def part1(data: str = DATA, qty: int = 150) -> int:
     :param data: The input data.
     :return: The number of ways to fill the buckets.
     """
-    buckets = [int(b) for b in data.split("\n")]
+    buckets = [int(b) for b in data.splitlines()]
     return len(list(partition_buckets(qty, buckets)))
 
 
@@ -79,7 +79,7 @@ def part2(data: str = DATA, qty: int = 150) -> int:
     :param data: The input data.
     :return: The number of ways to fill the buckets using the minimum number of containers..
     """
-    buckets = [int(b) for b in data.split("\n")]
+    buckets = [int(b) for b in data.splitlines()]
 
     min_containers = math.inf
     partitions = list(partition_buckets(qty, buckets))

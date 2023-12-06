@@ -66,7 +66,7 @@ def get_distances(data: str) -> Mapping[str, Mapping[str, int]]:
     :returns: The distance mapping.
     """
     distances = defaultdict(lambda: defaultdict(int))
-    for line in data.split("\n"):
+    for line in data.splitlines():
         route_desc, distance = line.split(" = ")
         place1, place2 = route_desc.split(" to ")
         distance = int(distance)

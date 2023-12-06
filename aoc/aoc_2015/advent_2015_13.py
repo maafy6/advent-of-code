@@ -87,7 +87,7 @@ def get_happiness_map(data: str) -> Mapping[str, Mapping[str, int]]:
     :returns: The happiness effect mapping.
     """
     happiness = defaultdict(lambda: defaultdict(int))
-    for line in data.split("\n"):
+    for line in data.splitlines():
         if match := re.match(
             r"(\w+) would (gain|lose) (\d+) happiness units by sitting next to (\w+).",
             line.strip(),

@@ -136,7 +136,7 @@ def part1(data: str = DATA) -> int:
         "blue": 14,
     }
     valid_games = []
-    for line in data.split("\n"):
+    for line in data.splitlines():
         if not line:
             continue
 
@@ -164,7 +164,7 @@ def part2(data: str = DATA) -> int:
     :returns: The sum of the minimum power of all the games.
     """
     min_powers = []
-    for line in data.split("\n"):
+    for line in data.splitlines():
         if not line:
             continue
 

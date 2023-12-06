@@ -233,7 +233,7 @@ class LightGrid:
 
         :param text: The text string.
         """
-        grid = [[1 if char == "#" else 0 for char in line] for line in text.split("\n")]
+        grid = [[1 if char == "#" else 0 for char in line] for line in text.splitlines()]
         return cls(grid, corners_on=corners_on)
 
 

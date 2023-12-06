@@ -95,7 +95,7 @@ class CircuitBoard:
         :param data: The input instructions.
         """
         tasks = []
-        for line in data.split("\n"):
+        for line in data.splitlines():
             if match := re.match(r"(.*)->(.*)", line):
                 instruction, target = match.group(1).strip(), match.group(2).strip()
                 task = asyncio.create_task(self.apply_instruction(instruction, target))
@@ -309,7 +309,7 @@ async def part2(data: str = DATA) -> int:
     b_override = await part1(data)
 
     new_data = []
-    for line in data.split("\n"):
+    for line in data.splitlines():
         if line.endswith("-> b"):
             new_data.append(f"{b_override} -> b")
         else:

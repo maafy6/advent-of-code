@@ -120,7 +120,7 @@ def part1(data: str = DATA) -> int:
     :param data: The input data.
     :returns: The difference in total code and string lengths.
     """
-    lengths = [get_lengths(code) for code in data.split("\n")]
+    lengths = [get_lengths(code) for code in data.splitlines()]
     code_lens, str_lens = zip(*lengths)
     return sum(code_lens) - sum(str_lens)
 
@@ -131,6 +131,6 @@ def part2(data: str = DATA) -> int:
     :param data: The input data.
     :returns: The difference in total code and encoded lengths.
     """
-    lengths = [get_encoding_lengths(code) for code in data.split("\n")]
+    lengths = [get_encoding_lengths(code) for code in data.splitlines()]
     code_lens, encode_lens = zip(*lengths)
     return sum(encode_lens) - sum(code_lens)

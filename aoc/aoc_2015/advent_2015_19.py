@@ -101,7 +101,7 @@ def parse_input(data: str) -> Tuple[Mapping[str, Sequence[str]], str]:
     replacement_data, molecule = data.split("\n\n")
 
     replacements = defaultdict(list)
-    for rep_data in replacement_data.split("\n"):
+    for rep_data in replacement_data.splitlines():
         source, dest = rep_data.split(" => ")
         replacements[source].append(dest)
 

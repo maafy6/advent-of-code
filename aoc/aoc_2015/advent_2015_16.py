@@ -155,7 +155,7 @@ def _solve(data: str, part: int) -> int:
         "perfumes": 1,
     }
 
-    sues = [Sue.from_desc(desc) for desc in data.split("\n")]
+    sues = [Sue.from_desc(desc) for desc in data.splitlines()]
     matches = [sue for sue in sues if sue.matches(description, part)]
     if len(matches) > 1:
         raise RuntimeError("No unique match.")

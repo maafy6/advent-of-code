@@ -129,7 +129,7 @@ def part1(data: str = DATA, duration: int = 2503) -> int:
     """
     return max(
         reindeer_distance(Reindeer.from_str(reindeer), duration)
-        for reindeer in data.split("\n")
+        for reindeer in data.splitlines()
     )
 
 
@@ -161,6 +161,6 @@ def part2(data: str = DATA, duration: int = 2503) -> int:
     :param data: The input data.
     :returns: The winner score.
     """
-    reindeers = [Reindeer.from_str(desc) for desc in data.split("\n")]
+    reindeers = [Reindeer.from_str(desc) for desc in data.splitlines()]
     scores = reindeer_race(reindeers, duration)
     return max(scores.values())
