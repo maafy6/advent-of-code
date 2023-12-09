@@ -111,14 +111,14 @@ Simultaneously start on every node that ends with `A`. How many steps does it
 take before you're only on nodes that end with Z?
 """
 
-import itertools
-import math
 import re
 from functools import partial
 from multiprocessing import Pool, cpu_count
 from typing import Iterator, Mapping
 
 from aocd import get_data
+
+from aoc.utils import chinese_remainder_theorem
 
 DATA = get_data(year=2023, day=8)
 
@@ -142,15 +142,22 @@ def parse_input(data: str) -> tuple[str, dict[str, tuple[str, str]]]:
 
 def traverse(
     start: str, end: str | None, method: str, node_map: Mapping[str, tuple[str, str]]
-) -> Iterator[str]:
-    """ """
+) -> Iterator[tuple[str, int]]:
+    """Traverse the map until the end point is reached.
+
+    :param start: The starting node.
+    :param end: The ending node. (If `None`, will traverse infinitely.)
+    :param method: The instruction string.
+    :param node_map: The node map.
+    :yields: The nodes reached in successive order and the instruction index.
+    """
     t_map = {"L": 0, "R": 1}
 
     current = start
     method_index = 0
     while end is None or current != end:
         current = node_map[current][t_map[method[method_index]]]
-        yield current
+        yield current, method_index
         method_index = (method_index + 1) % len(method)
 
 
@@ -164,20 +171,12 @@ def get_loop(
     :param node_map: The node mapping.
     :returns: The initial and loop sequence for the node.
     """
-    t_map = {"L": 0, "R": 1}
-
-    path = []
-
-    current = start
-    method_index = 0
-    while True:
-        instruction = (current, method_index)
+    path, method_index = [(start, 0)], None
+    for instruction in traverse(start, None, method, node_map):
         if instruction in path:
+            method_index = instruction[1] + 1
             break
         path.append(instruction)
-
-        current = node_map[current][t_map[method[method_index]]]
-        method_index = (method_index + 1) % len(method)
 
     return path[:method_index], path[method_index:]
 
@@ -189,7 +188,7 @@ def part1(data: str = DATA) -> int:
     :returns: The solution.
     """
     method, node_map = parse_input(data)
-    return len(list(traverse("AAA", "ZZZ", method, node_map)))
+    return len(list(n for n, i in traverse("AAA", "ZZZ", method, node_map)))
 
 
 def part2(data: str = DATA) -> int:
@@ -210,10 +209,19 @@ def part2(data: str = DATA) -> int:
 
     # For each starting point, find the points in the loop at which an entry
     # ending with Z is found.
-    z_offsets = [
-        [len(initial) + loop.index(n) for n in loop if n[0].endswith("Z")]
-        for initial, loop in loops
-    ]
+    z_offsets = {}
+    loop_lengths = {}
+    for initial, loop in loops:
+        start = initial[0][0] if initial else loop[0][0]
+        z_offsets[start] = [
+            (len(initial) + loop.index(n)) % len(loop)
+            for n in loop
+            if n[0].endswith("Z")
+        ]
+        loop_lengths[start] = len(loop)
 
-    # Return the smallest LCM combination of z-offsets
-    return min(math.lcm(*c) for c in itertools.product(*z_offsets))
+    solutions, modulus = chinese_remainder_theorem(z_offsets, loop_lengths)
+    if not solutions:
+        raise ValueError("No solutions.")
+
+    return min(solutions) + modulus
