@@ -1,4 +1,5 @@
 advent-of-code-data
 pytest
 pytest-asyncio
+tqdm
 typing_extensions

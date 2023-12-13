@@ -173,31 +173,35 @@ counts?
 """
 
 from collections.abc import Iterator
+from functools import lru_cache
 from itertools import groupby
 
 from aocd import get_data
+from tqdm import tqdm
 
 DATA = get_data(year=2023, day=12)
 
 
-def parse_input(data: str) -> Iterator[tuple[str, list[int]]]:
+def parse_input(data: str) -> Iterator[tuple[str, tuple[int, ...]]]:
     """Parse the text input."""
     for line in data.splitlines():
         record, desc = line.split()
-        desc = [int(d) for d in desc.split(",")]
+        desc = tuple(int(d) for d in desc.split(","))
         yield record, desc
 
 
-def describe_nonogram(nono: str) -> list[int]:
+def describe_nonogram(nono: str) -> tuple[int, ...]:
     """Describe a nonogram according to its sequence of # characters.
 
     :param nono: The nonogram string.
     :returns: A list of consecutive sequences of #.
     """
-    return [sum(1 for _ in g) for c, g in groupby(nono) if c == "#"]
+    return tuple(sum(1 for _ in g) for c, g in groupby(nono) if c == "#")
 
 
-def gen_nonograms(record: str, desc: list[int], prefix: str = "") -> Iterator[str]:
+def gen_nonograms(
+    record: str, desc: tuple[int, ...], prefix: str = ""
+) -> Iterator[str]:
     """Generate nonograms matching the record and its description.
 
     :param record: The record, with wildcard values as ?.
@@ -213,21 +217,15 @@ def gen_nonograms(record: str, desc: list[int], prefix: str = "") -> Iterator[st
         yield prefix + record.replace("?", ".")
         return
 
-    # If there are no more `?`, we should just validate the remaining nonogram
-    # for validity.
-    if "?" not in record:
-        if describe_nonogram(record) == desc:
-            yield prefix + record
-        return
-
     # If there are fewer possible `#` characters than the description requires,
     # abort.
     maybe_hashes = record.count("#") + record.count("?")
     if maybe_hashes < sum(desc):
         return
 
-    # If there are exactly as many, evaluate the record with all `?` as `#`.
-    if maybe_hashes == sum(desc):
+    # If there are no more free `?` characters, we should just validate the
+    # remaining nonogram for validity.
+    if "?" not in record or maybe_hashes == sum(desc):
         record = record.replace("?", "#")
         if describe_nonogram(record) == desc:
             yield prefix + record
@@ -271,6 +269,71 @@ def gen_nonograms(record: str, desc: list[int], prefix: str = "") -> Iterator[st
         raise ValueError("Invalid nonogram character.")
 
 
+@lru_cache
+def count_nonograms(record: str, desc: tuple[int, ...]) -> int:
+    """Count the number of nonograms that can be produced by the record.
+
+    :param record: The record.
+    :param desc: The description of the nonogram.
+    :returns: The number of nonograms that can be produced.
+    """
+    nono_len = len(record)
+
+    # If there are no more description parts, ensure that there are no more
+    # remaining `#` characters.
+    if not desc:
+        return 1 if record.replace("?", ".") == "." * nono_len else 0
+
+    total = 0
+    # The minimum length of the nonogram.
+    min_length = sum(desc) + len(desc) - 1
+    # The length required by the next section of the nonogram.
+    next_length = desc[0] + (1 if len(desc) > 1 else 0)
+
+    # Iterate over each possible starting position for the next run of `#` in
+    # the nonogram and count the number of nonograms that may be produced from
+    # there.
+    for i in range(nono_len - min_length + 1):
+        # Build the next section of the nonogram from the record, replacing `?`
+        # with `#` in the spots that correspond to the run and `.` elsewhere.
+        next_section = record[:i].replace("?", ".") + record[i : i + desc[0]].replace(
+            "?", "#"
+        )
+        if len(desc) > 1:
+            next_section += record[i + desc[0]].replace("?", ".")
+
+        # Verify that the next section of the nonogram actually matches the
+        # expected form.
+        if (
+            (next_section[:i] != "." * i)
+            or (next_section[i : i + desc[0]] != "#" * desc[0])
+            or (len(desc) > 1 and next_section[-1] == "#")
+        ):
+            continue
+
+        total += count_nonograms(record[i + next_length :], desc[1:])
+
+    return total
+
+
+def count_expanded_nonogram(
+    record: str, desc: tuple[int, ...], expansion: int = 1
+) -> int:
+    """Count the nonograms that can be obtained from the expanded nonogram.
+
+    The nonogram will be expanded by joining the requested number of copies of
+    the record with a `?` in between and by joining the requested number of
+    copies of the description together.
+
+    :param record: The original record.
+    :param desc: The original description.
+    :param expansion: The expansion factor.
+    :returns: The number of nonograms that can be obtained from the expanded
+        nonogram.
+    """
+    return count_nonograms("?".join([record] * expansion), desc * expansion)
+
+
 def part1(data: str = DATA) -> int:
     """Solve Part 1.
 
@@ -289,3 +352,7 @@ def part2(data: str = DATA) -> int:
     :param data: The input data.
     :returns: The solution.
     """
+    return sum(
+        count_expanded_nonogram(record, desc, 5)
+        for record, desc in tqdm(list(parse_input(data)))
+    )
