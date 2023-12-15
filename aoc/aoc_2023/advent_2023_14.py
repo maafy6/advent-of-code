@@ -150,6 +150,7 @@ Run the spin cycle for `1000000000` cycles. Afterward, what is the total load on
 the north support beams?
 """
 
+import functools
 from collections.abc import Iterator
 
 from aocd import get_data
@@ -209,37 +210,42 @@ def rotate(platform: PlatformGrid) -> PlatformGrid:
     )
 
 
+@functools.lru_cache(512)
+def _tilt_row(row: str) -> str:
+    """Tilt the row all the way to the right (end of the string).
+
+    :param row: The row.
+    :returns: The tilted row.
+    """
+    tilted_row = ""
+    total_count, round_count = 0, 0
+
+    for grp in group_str(row):
+        if grp[0] == "O":
+            count = len(grp)
+            total_count += count
+            round_count += count
+        elif grp[0] == "#":
+            if total_count:
+                tilted_row += "." * (total_count - round_count)
+                tilted_row += "O" * round_count
+            tilted_row += grp
+            total_count, round_count = 0, 0
+        elif grp[0] == ".":
+            total_count += len(grp)
+
+    tilted_row += "." * (total_count - round_count)
+    tilted_row += "O" * round_count
+    return tilted_row
+
+
 def tilt_platform(platform: PlatformGrid) -> PlatformGrid:
     """Tilt the platform to move rocks as far as possible to the edge.
 
     :param platform: Tilt the platform in the E direction.
     :returns: The tilted platform.
     """
-    rotated = rotate(platform)
-    tilted = []
-    for row in rotated:
-        tilted_row = ""
-        total_count, round_count = 0, 0
-
-        for grp in group_str(row):
-            if grp[0] == "O":
-                count = len(grp)
-                total_count += count
-                round_count += count
-            elif grp[0] == "#":
-                if total_count:
-                    tilted_row += "." * (total_count - round_count)
-                    tilted_row += "O" * round_count
-                tilted_row += grp
-                total_count, round_count = 0, 0
-            elif grp[0] == ".":
-                total_count += len(grp)
-
-        tilted_row += "." * (total_count - round_count)
-        tilted_row += "O" * round_count
-        tilted.append(tilted_row)
-
-    return tuple(t for t in tilted)
+    return tuple(_tilt_row(r) for r in rotate(platform))
 
 
 def tilt_cycle(platform: PlatformGrid) -> PlatformGrid:
