@@ -4,6 +4,9 @@
         "dockerfile": "Dockerfile",
         "context": ".."
     },
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/home/aoc/.ssh,type=bind,ro"
+    ],
     "runArgs": ["--env-file", ".env"],
     "customizations": {
         "vscode": {
