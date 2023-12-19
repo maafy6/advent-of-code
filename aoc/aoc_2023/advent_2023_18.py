@@ -73,16 +73,52 @@ codes in the dig plan.
 
 The Elves are concerned the lagoon won't be large enough; if they follow their
 dig plan, how many cubic meters of lava could it hold?
+
+Part Two
+========
+
+The Elves were right to be concerned; the planned lagoon would be much too
+small.
+
+After a few minutes, someone realizes what happened; someone swapped the color
+and instruction parameters when producing the dig plan. They don't have time to
+fix the bug; one of them asks if you can extract the correct instructions from
+the hexadecimal codes.
+
+Each hexadecimal code is six hexadecimal digits long. The first five hexadecimal
+digits encode the distance in meters as a five-digit hexadecimal number. The
+last hexadecimal digit encodes the direction to dig: `0` means `R`, `1` means
+`D`, `2` means `L`, and `3` means `U`.
+
+So, in the above example, the hexadecimal codes can be converted into the true
+instructions:
+
+- `#70c710` = `R 461937`
+- `#0dc571` = `D 56407`
+- `#5713f0` = `R 356671`
+- `#d2c081` = `D 863240`
+- `#59c680` = `R 367720`
+- `#411b91` = `D 266681`
+- `#8ceee2` = `L 577262`
+- `#caa173` = `U 829975`
+- `#1b58a2` = `L 112010`
+- `#caa171` = `D 829975`
+- `#7807d2` = `L 491645`
+- `#a77fa3` = `U 686074`
+- `#015232` = `L 5411`
+- `#7a21e3` = `U 500254`
+
+Digging out this loop and its interior produces a lagoon that can hold an
+impressive `952408144115` cubic meters of lava.
+
+Convert the hexadecimal color codes into the correct instructions; if the Elves
+follow this new dig plan, how many cubic meters of lava could the lagoon hold?
 """
 
 import re
-from collections import defaultdict
 from typing import Literal, Self
 
 from aocd import get_data
-
-from .advent_2023_10 import get_contained_tiles, get_loop_tiles
-from .advent_2023_10 import parse_data as read_pipe_map
 
 DATA = get_data(year=2023, day=18)
 
@@ -97,66 +133,139 @@ class Polygon:
     def __init__(self) -> None:
         """Initialize the polygon."""
         self._points: list[Point] = [(0, 0)]
-        self._lines: list[tuple[Point, Point]] = []
-        self._bounds: dict[Direction, int] = {k: 0 for k in "LRDU"}
         self._h_lines: list[tuple[Point, Point]] = []
-        self._v_lines: list[tuple[Point, Point]] = []
 
     def count(self) -> int:
         """Return the number of tiles included in the polygon, including border tiles."""
-        pipe_map = read_pipe_map(self.to_pipe_map())
-        return len(get_contained_tiles(pipe_map)) + len(get_loop_tiles(pipe_map))
+        current = []
+        last_y = None
+        area = 0
 
-    def to_pipe_map(self) -> str:
-        """Generate a pipe map string from the polygon.
+        # Scan the horizontal lines of polygon. Maintain an initially empty
+        # list of active horizontal ranges that mark a square as being in the
+        # polygon. Each time a new horizontal line is encountered, calculate
+        # the area of the squares in the ranges since the last horizontal line
+        # and update the ranges.
+        for p0, p1 in sorted(self._h_lines, key=lambda l: (l[0][1], l[0][0])):
+            h_range = range(p0[0], p1[0] + 1)
+            if last_y is None:
+                current = [h_range]
+                last_y = p0[1]
+                continue
 
-        c.f. AOC 2023-10 for where the pipe map came from.
+            # Add in the area of the ranges from this horizontal line to the
+            # previous. `p0[1] - last_y` gives the height, while the sum over
+            # all the ranges gives the total width.
+            area += (p0[1] - last_y) * sum((r.stop - r.start) for r in current)
+            last_y = p0[1]
 
-        :returns: The pipe map string.
-        """
-        h_shift = -self._bounds["L"]
-        v_shift = -self._bounds["U"]
+            # Rebuild the list of horizontal ranges. If there the new horizontal
+            # lines causes squares below it to no longer be in the polygon,
+            # then the area of those border squares should be added in here.
+            updated_ranges: list[range] = []
+            merged = False
+            for r in current:
+                # (1) The new horizontal line matches the existing range exactly.
+                #
+                #       #######
+                #       ~~~~~~~
+                #
+                #   In this case, we add in the area for the border ~ squares
+                #   and remove the range from the list by not adding it back in
+                #   to `updated_ranges`.
+                if h_range.start == r.start and h_range.stop == r.stop:
+                    area += h_range.stop - h_range.start
+                    merged = True
+                # (2) The new horizontal line is entirely enclosed in the range.
+                #
+                #       #######
+                #         ~~~
+                #
+                #   Split the existing range into two ranges:
+                #
+                #       ### ###
+                #
+                #   Note that the endpoints of the considered range need to be
+                #   present in the new ranges.
+                elif r.start < h_range.start and h_range.stop < r.stop:
+                    updated_ranges.append(range(r.start, h_range.start + 1))
+                    updated_ranges.append(range(h_range.stop - 1, r.stop))
+                    merged = True
+                    area += h_range.stop - h_range.start - 2
+                # (3) The new horizontal line starts where the range stops:
+                #
+                #       #######
+                #             ~~~~
+                #
+                #   Extend the range to cover the combined effect.
+                #
+                #       ##########
+                elif h_range.start + 1 == r.stop:
+                    merged = True
+                    updated_ranges.append(range(r.start, h_range.stop))
+                # (3b) Special case where a new horizontal line "joins" two
+                #   existing ranges.
+                #
+                #       #######  ####
+                #             ~~~~
+                #
+                #   To detect this case, look back at the last entry in the
+                #   updated ranges and see if the previous one now touches this
+                #   one. This requires us to keep the range list sorted by
+                #   start point.
+                #
+                #       #############
+                elif updated_ranges and updated_ranges[-1].stop == r.start + 1:
+                    left_range = updated_ranges.pop()
+                    updated_ranges.append(range(left_range.start, r.stop))
+                # (4) The new horizontal line stops where the range starts:
+                #
+                #          #######
+                #       ~~~~
+                #
+                #   Extend the range to cover the combined effect.
+                #
+                #       ##########
+                elif h_range.stop == r.start + 1:
+                    merged = True
+                    updated_ranges.append(range(h_range.start, r.stop))
+                # (5) The new horizontal line and range have the same start point:
+                #
+                #       #######
+                #       ~~~~
+                #
+                #   Contract the range, ensuring the internal endpoint stays in
+                #   the polygon.
+                #
+                #          ####
+                elif h_range.start == r.start:
+                    updated_ranges.append(range(h_range.stop - 1, r.stop))
+                    merged = True
+                    area += h_range.stop - h_range.start - 1
+                # (6) The new horizontal line and range have the same start point:
+                #
+                #       #######
+                #          ~~~~
+                #
+                #   Contract the range, ensuring the internal endpoint stays in
+                #   the polygon.
+                #
+                #       ####
+                elif h_range.stop == r.stop:
+                    merged = True
+                    updated_ranges.append(range(r.start, h_range.start + 1))
+                    area += h_range.stop - h_range.start - 1
+                # (7) The new line is completely outside of this range, so it
+                #   should be carried over unchanged.
+                else:
+                    updated_ranges.append(r)
 
-        points = [(x + h_shift, y + v_shift) for (x, y) in self._points]
+            if not merged:
+                updated_ranges.append(h_range)
 
-        grid_map = defaultdict(lambda: defaultdict(lambda: "."))
-        last_point = None
-        for point in points:
-            x, y = point
-            if last_point is None:
-                grid_map[y][x] = "S"
-            else:
-                x0, y0 = last_point
-                if x == x0:
-                    if grid_map[y][x] != "S":
-                        grid_map[y][x] = "v" if y > y0 else "^"
+            current = sorted(updated_ranges, key=lambda r: r.start)
 
-                    if grid_map[y0][x0] == ">":
-                        grid_map[y0][x0] = "7" if y > y0 else "J"
-                    elif grid_map[y0][x0] == "<":
-                        grid_map[y0][x0] = "F" if y > y0 else "L"
-
-                    for i in range(min(y0, y) + 1, max(y0, y)):
-                        grid_map[i][x] = "|"
-
-                elif y == y0:
-                    if grid_map[y][x] != "S":
-                        grid_map[y][x] = ">" if x > x0 else "<"
-
-                    if grid_map[y0][x0] == "^":
-                        grid_map[y0][x0] = "F" if x > x0 else "7"
-                    elif grid_map[y0][x0] == "v":
-                        grid_map[y0][x0] = "L" if x > x0 else "J"
-
-                    for i in range(min(x0, x) + 1, max(x0, x)):
-                        grid_map[y][i] = "-"
-
-            last_point = point
-
-        return "\n".join(
-            "".join(grid_map[i][j] for j in range(self._bounds["R"] + h_shift + 1))
-            for i in range(self._bounds["D"] + v_shift + 1)
-        )
+        return area
 
     def _add_point(self, direction: Direction, count: int) -> None:
         """Add a point to the polygon.
@@ -168,26 +277,19 @@ class Polygon:
 
         if direction == "L":
             next_point = (last_point[0] - count, last_point[1])
-            self._bounds["L"] = min(self._bounds["L"], next_point[0])
             self._h_lines.append((next_point, last_point))
         elif direction == "R":
             next_point = (last_point[0] + count, last_point[1])
-            self._bounds["R"] = max(self._bounds["R"], next_point[0])
             self._h_lines.append((last_point, next_point))
         elif direction == "D":
             next_point = (last_point[0], last_point[1] + count)
-            self._bounds["D"] = max(self._bounds["D"], next_point[1])
-            self._v_lines.append((last_point, next_point))
         elif direction == "U":
             next_point = (last_point[0], last_point[1] - count)
-            self._bounds["U"] = min(self._bounds["U"], next_point[1])
-            self._v_lines.append((next_point, last_point))
 
         self._points.append(next_point)
-        self._lines.append((last_point, next_point))
 
     @classmethod
-    def loads(cls, data: str) -> Self:
+    def loads(cls, data: str, *, part: int) -> Self:
         """Load a polygon from the string.
 
         :param data: The data describing the polygon.
@@ -195,9 +297,23 @@ class Polygon:
         """
         poly = cls()
         for line in data.splitlines():
-            if match := re.match(r"([LRDU])\s+(\d+)\s+\(#[0-9a-f]{6}\)", line):
-                direction, count = match.groups()
-                poly._add_point(direction, int(count))
+            if part == 1:
+                if match := re.match(r"([LRDU])\s+(\d+)\s+\(#[0-9a-f]{6}\)", line):
+                    direction, count_str = match.groups()
+                    count = int(count_str)
+                else:
+                    raise ValueError("Invalid line.")
+            if part == 2:
+                if match := re.match(
+                    r"[LRDU]\s+\d+\s+\(#([0-9a-f]{5})([0123])\)", line
+                ):
+                    count_str, dir_str = match.groups()
+                    count = int(count_str, base=16)
+                    direction = {"0": "R", "1": "D", "2": "L", "3": "U"}[dir_str]
+                else:
+                    raise ValueError("Invalid line.")
+
+            poly._add_point(direction, count)
 
         if len(poly._points) < 4 or poly._points[0] != poly._points[-1]:
             raise ValueError("Polygon is not closed.")
@@ -222,3 +338,5 @@ def part2(data: str = DATA) -> int:
     :param data: The input data.
     :returns: The solution.
     """
+    poly = Polygon.loads(data, part=2)
+    return poly.count()
